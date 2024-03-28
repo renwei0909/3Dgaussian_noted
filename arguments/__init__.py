@@ -46,10 +46,10 @@ class ParamGroup:
 
 class ModelParams(ParamGroup): 
     def __init__(self, parser, sentinel=False):
-        self.sh_degree = 3
-        self._source_path = ""
-        self._model_path = ""
-        self._images = "images"
+        self.sh_degree = 3 #球协函数纬度
+        self._source_path = "" #图像地址
+        self._model_path = ""   #模型地址
+        self._images = "images" 
         self._resolution = -1
         self._white_background = False
         self.data_device = "cuda"
@@ -70,23 +70,23 @@ class PipelineParams(ParamGroup):
 
 class OptimizationParams(ParamGroup):
     def __init__(self, parser):
-        self.iterations = 30_000
-        self.position_lr_init = 0.00016
-        self.position_lr_final = 0.0000016
-        self.position_lr_delay_mult = 0.01
-        self.position_lr_max_steps = 30_000
-        self.feature_lr = 0.0025
-        self.opacity_lr = 0.05
-        self.scaling_lr = 0.005
-        self.rotation_lr = 0.001
-        self.percent_dense = 0.01
-        self.lambda_dssim = 0.2
-        self.densification_interval = 100
-        self.opacity_reset_interval = 3000
-        self.densify_from_iter = 500
-        self.densify_until_iter = 15_000
-        self.densify_grad_threshold = 0.0002
-        self.random_background = False
+        self.iterations = 30_000 # 迭代次数
+        self.position_lr_init = 0.00016 #位置学习率初值
+        self.position_lr_final = 0.0000016 #位置学习率终值
+        self.position_lr_delay_mult = 0.01 #
+        self.position_lr_max_steps = 30_000 #
+        self.feature_lr = 0.0025 #特征学习率
+        self.opacity_lr = 0.05 #不透明度
+        self.scaling_lr = 0.005 #尺度学习率
+        self.rotation_lr = 0.001 #旋转学习率
+        self.percent_dense = 0.01 #
+        self.lambda_dssim = 0.2 # d-ssim损失的系数
+        self.densification_interval = 100 #致密化和移除透明的迭代次数
+        self.opacity_reset_interval = 3000 #每3000轮删除过小的gaussian 
+        self.densify_from_iter = 500 #致密化
+        self.densify_until_iter = 15_000 #
+        self.densify_grad_threshold = 0.0002 #用于判断致密化的梯度大小
+        self.random_background = False #是否随机初始化北京
         super().__init__(parser, "Optimization Parameters")
 
 def get_combined_args(parser : ArgumentParser):

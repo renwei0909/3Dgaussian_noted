@@ -109,6 +109,9 @@ def build_scaling_rotation(s, r):
     L = R @ L
     return L
 
+'''
+配置系统输出，随机种子和cuda:device
+'''
 def safe_state(silent):
     old_f = sys.stdout
     class F:
