@@ -12,28 +12,40 @@
 import os
 import torch
 from random import randint
-from utils.loss_utils import l1_loss, ssim
-from gaussian_renderer import render, network_gui
-import sys
-from scene import Scene, GaussianModel
+from utils.loss_utils import l1_loss, ssim # l1_loss, ssimloss
+from gaussian_renderer import render, network_gui # 渲染相关
+import sys 
+from scene import Scene, GaussianModel #场景模型相关
 from utils.general_utils import safe_state
 import uuid
 from tqdm import tqdm
-from utils.image_utils import psnr
-from argparse import ArgumentParser, Namespace
-from arguments import ModelParams, PipelineParams, OptimizationParams
+from utils.image_utils import psnr 
+from argparse import ArgumentParser, Namespace # 参数
+from arguments import ModelParams, PipelineParams, OptimizationParams #参数
 try:
     from torch.utils.tensorboard import SummaryWriter
     TENSORBOARD_FOUND = True
 except ImportError:
     TENSORBOARD_FOUND = False
 
+    """训练模型整体流控制
+    Args:
+        dataset : 模型参数
+        opt : 优化器参数
+        pipe : ？？参数
+        testing_iterations : 测试轮数 
+        saving_iterations : 模型保存轮数
+        checkpoint_iterations : 
+        checkpoint : 
+        debug_from : 
+    """
 def training(dataset, opt, pipe, testing_iterations, saving_iterations, 
              checkpoint_iterations, checkpoint, debug_from):
+
     first_iter = 0
     tb_writer = prepare_output_and_logger(dataset) # outputTODO存储位置准备
-    gaussians = GaussianModel(dataset.sh_degree)  # TODO
-    scene = Scene(dataset, gaussians) # TODO
+    gaussians = GaussianModel(dataset.sh_degree)  # 
+    scene = Scene(dataset, gaussians) # 
     gaussians.training_setup(opt) #gaussian 初始化
     # 是否checkpoint
     if checkpoint:
@@ -148,10 +160,11 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations,
                 print("\n[ITER {}] Saving Checkpoint".format(iteration))
                 torch.save((gaussians.capture(), iteration), scene.model_path + "/chkpnt" + str(iteration) + ".pth")
 
-'''
-如果没有指定model path的参数，则创建./output/ + uuid
-'''
-def prepare_output_and_logger(args):    
+    """_summary_
+    输入dataset的配置参数
+    """
+def prepare_output_and_logger(args):   
+    # 如果没有指定model path的参数，则创建./output/ + uuid 
     if not args.model_path:
         if os.getenv('OAR_JOB_ID'):
             unique_str=os.getenv('OAR_JOB_ID')
@@ -160,12 +173,15 @@ def prepare_output_and_logger(args):
         args.model_path = os.path.join("./output/", unique_str[0:10])
         
     # Set up output folder
+    # 初始化Output的文件夹
+    # 将ModelParams相关配置写入cfg
     print("Output folder: {}".format(args.model_path))
     os.makedirs(args.model_path, exist_ok = True)
     with open(os.path.join(args.model_path, "cfg_args"), 'w') as cfg_log_f:
         cfg_log_f.write(str(Namespace(**vars(args))))
 
     # Create Tensorboard writer
+    # Tensorboard初始话
     tb_writer = None
     if TENSORBOARD_FOUND:
         tb_writer = SummaryWriter(args.model_path)
@@ -225,13 +241,13 @@ if __name__ == "__main__":
     parser = ArgumentParser(description="Training script parameters")
     lp = ModelParams(parser) #初始化模型
     op = OptimizationParams(parser) #优化参数
-    pp = PipelineParams(parser) #TODO
-    parser.add_argument('--ip', type=str, default="127.0.0.1") 
-    parser.add_argument('--port', type=int, default=6009)
+    pp = PipelineParams(parser) #??
+    parser.add_argument('--ip', type=str, default="127.0.0.1") #ip
+    parser.add_argument('--port', type=int, default=6009) #端口
     parser.add_argument('--debug_from', type=int, default=-1) 
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
-    parser.add_argument("--test_iterations", nargs="+", type=int, default=[7_000, 30_000])
-    parser.add_argument("--save_iterations", nargs="+", type=int, default=[7_000, 30_000])
+    parser.add_argument("--test_iterations", nargs="+", type=int, default=[7_000, 30_000]) #验证的优化轮数
+    parser.add_argument("--save_iterations", nargs="+", type=int, default=[7_000, 30_000]) #保存的验证轮数
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default = None)
@@ -241,12 +257,12 @@ if __name__ == "__main__":
     print("Optimizing " + args.model_path)
 
     # Initialize system state (RNG)
-    safe_state(args.quiet)
+    safe_state(args.quiet) #配置系统随机种子
 
     # Start GUI server, configure and run training
 
     network_gui.init(args.ip, args.port)     # gaussian 渲染器初始化
-    torch.autograd.set_detect_anomaly(args.detect_anomaly) # 是否开启自动求导的异常检测
+    torch.autograd.set_detect_anomaly(args.detect_anomaly) # 是否开启自动求导的异常检测，默认为false
     # 训练
     training(lp.extract(args), op.extract(args), pp.extract(args), args.test_iterations, args.save_iterations, args.checkpoint_iterations, args.start_checkpoint, args.debug_from)
 

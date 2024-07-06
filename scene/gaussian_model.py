@@ -24,6 +24,8 @@ from utils.general_utils import strip_symmetric, build_scaling_rotation
 class GaussianModel:
 
     def setup_functions(self):
+        
+        
         def build_covariance_from_scaling_rotation(scaling, scaling_modifier, rotation):
             L = build_scaling_rotation(scaling_modifier * scaling, rotation)
             actual_covariance = L @ L.transpose(1, 2)
@@ -41,21 +43,21 @@ class GaussianModel:
         self.rotation_activation = torch.nn.functional.normalize
 
 
-    def __init__(self, sh_degree : int):
-        self.active_sh_degree = 0
-        self.max_sh_degree = sh_degree  
-        self._xyz = torch.empty(0)
-        self._features_dc = torch.empty(0)
-        self._features_rest = torch.empty(0)
-        self._scaling = torch.empty(0)
-        self._rotation = torch.empty(0)
-        self._opacity = torch.empty(0)
-        self.max_radii2D = torch.empty(0)
-        self.xyz_gradient_accum = torch.empty(0)
-        self.denom = torch.empty(0)
+    def __init__(self, sh_degree : int): # 初始化该类(球协函数sh阶数)
+        self.active_sh_degree = 0 #激活的球协函数阶数
+        self.max_sh_degree = sh_degree  #最大的球协函数阶数
+        self._xyz = torch.empty(0) #gaussian的中心位置
+        self._features_dc = torch.empty(0) #SH的常量
+        self._features_rest = torch.empty(0) #SH的常量外的部分
+        self._scaling = torch.empty(0) #GS的尺度
+        self._rotation = torch.empty(0) #GS球的旋转
+        self._opacity = torch.empty(0) #GS的不透明度
+        self.max_radii2D = torch.empty(0) #2D半径
+        self.xyz_gradient_accum = torch.empty(0) #梯度的积累值
+        self.denom = torch.empty(0) #
         self.optimizer = None
-        self.percent_dense = 0
-        self.spatial_lr_scale = 0
+        self.percent_dense = 0 #用于得到阈值，决定split/clone
+        self.spatial_lr_scale = 0 #位置的lr
         self.setup_functions()
 
     def capture(self):
